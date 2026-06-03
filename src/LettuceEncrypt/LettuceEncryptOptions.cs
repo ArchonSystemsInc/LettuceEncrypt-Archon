@@ -73,6 +73,21 @@ public class LettuceEncryptOptions
     public X509Certificate2? FallbackCertificate { get; set; }
 
     /// <summary>
+    /// When <c>true</c>, a TLS handshake for a domain that has no certificate loaded in memory will
+    /// trigger an on-demand lookup against all registered certificate sources before falling back to
+    /// <see cref="FallbackCertificate"/>. Only domains that are part of the configured domain set
+    /// (see <see cref="DomainNames"/>) can trigger a lookup.
+    /// </summary>
+    public bool EnableOnDemandCertificateLookup { get; set; } = true;
+
+    /// <summary>
+    /// How long to suppress repeated on-demand certificate lookups for a domain after a lookup fails
+    /// to find a certificate. This prevents repeated certificate source queries for domains that have
+    /// no certificate. Only used when <see cref="EnableOnDemandCertificateLookup"/> is enabled.
+    /// </summary>
+    public TimeSpan OnDemandLookupCooldown { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>
     /// How long before certificate expiration will be renewal attempted.
     /// Set to <c>null</c> to disable automatic renewal.
     /// </summary>

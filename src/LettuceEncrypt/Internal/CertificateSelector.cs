@@ -14,12 +14,14 @@ internal class CertificateSelector : IServerCertificateSelector
     private readonly IOptions<LettuceEncryptOptions> _options;
     private readonly ILogger<CertificateSelector> _logger;
     private readonly IRuntimeCertificateStore _runtimeCertificateStore;
+    private readonly IOnDemandCertificateLoader _onDemandCertificateLoader;
 
-    public CertificateSelector(IOptions<LettuceEncryptOptions> options, ILogger<CertificateSelector> logger, IRuntimeCertificateStore runtimeCertificateStore)
+    public CertificateSelector(IOptions<LettuceEncryptOptions> options, ILogger<CertificateSelector> logger, IRuntimeCertificateStore runtimeCertificateStore, IOnDemandCertificateLoader onDemandCertificateLoader)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _runtimeCertificateStore = runtimeCertificateStore;
+        _onDemandCertificateLoader = onDemandCertificateLoader ?? throw new ArgumentNullException(nameof(onDemandCertificateLoader));
     }
 
     public IEnumerable<string> SupportedDomains => _runtimeCertificateStore.GetAllCertDomainsAsync().Result;
@@ -98,12 +100,21 @@ internal class CertificateSelector : IServerCertificateSelector
         }
 
         var cert = await _runtimeCertificateStore.GetCertAsync(domainName);
-        if (cert == null)
+        if (cert != null)
         {
-            return _options.Value.FallbackCertificate;
+            return cert;
         }
 
-        return cert;
+        // Fall back to retrieving the certificate from the underlying certificate sources on demand.
+        var onDemandCert = await _onDemandCertificateLoader.TryRetrieveAsync(domainName);
+        if (onDemandCert != null)
+        {
+            // Populate the runtime store so subsequent connections are served from memory.
+            await AddAsync(onDemandCert);
+            return await _runtimeCertificateStore.GetCertAsync(domainName) ?? onDemandCert;
+        }
+
+        return _options.Value.FallbackCertificate;
     }
 
     public async Task ResetAsync(string domainName)

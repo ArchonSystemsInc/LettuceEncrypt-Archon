@@ -33,6 +33,15 @@ internal class FileSystemCertificateRepository : ICertificateRepository, ICertif
         return Task.FromResult(certs.AsEnumerable());
     }
 
+    public async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken cancellationToken)
+    {
+        // Certificate files are named by thumbprint, so all of them must be loaded to find a match.
+        var certs = await GetCertificatesAsync(cancellationToken);
+        return certs
+            .Where(c => X509CertificateHelpers.GetAllDnsNames(c).Contains(domainName, StringComparer.OrdinalIgnoreCase))
+            .MaxBy(c => c.NotAfter);
+    }
+
     public Task SaveAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         _certDir.Create();

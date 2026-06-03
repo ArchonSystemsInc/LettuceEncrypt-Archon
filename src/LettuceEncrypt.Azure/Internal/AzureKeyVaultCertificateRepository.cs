@@ -50,7 +50,29 @@ internal class AzureKeyVaultCertificateRepository : ICertificateRepository, ICer
         return certs;
     }
 
-    private async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken token)
+    /// <summary>
+    /// Retrieves the certificate for a single domain without fetching certificates for every
+    /// configured domain group. Certificates are stored in Key Vault under the name of the
+    /// <em>first</em> domain of the domain group they were ordered for, so the group containing
+    /// the requested domain is resolved first.
+    /// </summary>
+    public async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken cancellationToken)
+    {
+        var domains = await _domains.GetDomainCertsAsync(cancellationToken);
+
+        foreach (var domainCert in domains)
+        {
+            if (domainCert.Domains.Contains(domainName, StringComparer.OrdinalIgnoreCase))
+            {
+                return await GetCertificateWithPrivateKeyAsync(domainCert.Domains.First(), cancellationToken);
+            }
+        }
+
+        _logger.LogDebug("No configured domain group contains {domainName}; skipping Key Vault lookup", domainName);
+        return null;
+    }
+
+    private async Task<X509Certificate2?> GetPublicCertificateAsync(string domainName, CancellationToken token)
     {
         _logger.LogInformation("Searching for certificate in KeyVault for {domainName}", domainName);
 
@@ -172,7 +194,7 @@ internal class AzureKeyVaultCertificateRepository : ICertificateRepository, ICer
     private async ValueTask<bool> ShouldImportVersionAsync(string domainName, X509Certificate2 certificate,
         CancellationToken token)
     {
-        using var other = await GetCertificateAsync(domainName, token);
+        using var other = await GetPublicCertificateAsync(domainName, token);
 
         if (other is null)
         {

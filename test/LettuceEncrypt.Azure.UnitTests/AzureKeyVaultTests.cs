@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Nate McMaster & Archon Systems Inc.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Security.Cryptography.X509Certificates;
+using Azure;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Secrets;
 using LettuceEncrypt.Azure.Internal;
@@ -122,5 +124,71 @@ public class AzureKeyVaultTests
             null, CancellationToken.None));
         secretClient.Verify(t => t.GetSecretAsync(AzureKeyVaultCertificateRepository.NormalizeHostName(Domain2),
             null, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task DomainSpecificLookupFetchesByGroupFirstDomain()
+    {
+        const string PrimaryDomain = "github.com";
+        const string SecondaryDomain = "azure.com";
+
+        var domainLoader = new Mock<IDomainLoader>();
+        domainLoader.Setup(x => x.GetDomainCertsAsync(It.IsAny<CancellationToken>(), false))
+            .Returns(() => Task.FromResult(new IDomainCert[]
+            {
+                new MultipleDomainCert { OrderedDomains = new HashSet<string> { PrimaryDomain, SecondaryDomain } }
+            }.AsEnumerable()));
+
+        var testCert = TestUtils.CreateTestCert(new[] { PrimaryDomain, SecondaryDomain });
+        var secretName = AzureKeyVaultCertificateRepository.NormalizeHostName(PrimaryDomain);
+        var secretValue = Convert.ToBase64String(testCert.Export(X509ContentType.Pfx));
+
+        var secretClient = new Mock<SecretClient>();
+        secretClient
+            .Setup(c => c.GetSecretAsync(secretName, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Response.FromValue(new KeyVaultSecret(secretName, secretValue), null));
+        var secretClientFactory = new Mock<ISecretClientFactory>();
+        secretClientFactory.Setup(c => c.Create()).Returns(secretClient.Object);
+
+        var repository = new AzureKeyVaultCertificateRepository(
+            Mock.Of<ICertificateClientFactory>(),
+            secretClientFactory.Object,
+            domainLoader.Object,
+            NullLogger<AzureKeyVaultCertificateRepository>.Instance);
+
+        // Requesting the secondary domain must resolve to the group's first domain for the lookup.
+        var cert = await repository.GetCertificateAsync(SecondaryDomain, CancellationToken.None);
+
+        Assert.NotNull(cert);
+        Assert.Equal(testCert.Thumbprint, cert!.Thumbprint);
+        secretClient.Verify(c => c.GetSecretAsync(secretName, null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DomainSpecificLookupReturnsNullForUnknownDomain()
+    {
+        var domainLoader = new Mock<IDomainLoader>();
+        domainLoader.Setup(x => x.GetDomainCertsAsync(It.IsAny<CancellationToken>(), false))
+            .Returns(() => Task.FromResult(new IDomainCert[]
+            {
+                new SingleDomainCert { Domain = "github.com" }
+            }.AsEnumerable()));
+
+        var secretClient = new Mock<SecretClient>();
+        var secretClientFactory = new Mock<ISecretClientFactory>();
+        secretClientFactory.Setup(c => c.Create()).Returns(secretClient.Object);
+
+        var repository = new AzureKeyVaultCertificateRepository(
+            Mock.Of<ICertificateClientFactory>(),
+            secretClientFactory.Object,
+            domainLoader.Object,
+            NullLogger<AzureKeyVaultCertificateRepository>.Instance);
+
+        var cert = await repository.GetCertificateAsync("unknown.test", CancellationToken.None);
+
+        Assert.Null(cert);
+        secretClient.Verify(
+            c => c.GetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

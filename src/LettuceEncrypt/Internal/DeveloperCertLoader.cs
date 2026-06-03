@@ -37,6 +37,14 @@ internal class DeveloperCertLoader : ICertificateSource
         return Task.FromResult(certs);
     }
 
+    public async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken cancellationToken)
+    {
+        var certs = await GetCertificatesAsync(cancellationToken);
+        return certs
+            .Where(c => X509CertificateHelpers.GetAllDnsNames(c).Contains(domainName, StringComparer.OrdinalIgnoreCase))
+            .MaxBy(c => c.NotAfter);
+    }
+
     private IEnumerable<X509Certificate2> FindDeveloperCert()
     {
         using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);

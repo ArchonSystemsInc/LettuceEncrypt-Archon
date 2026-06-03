@@ -46,6 +46,8 @@ public static class LettuceEncryptServiceCollectionExtensions
             .AddSingleton<IRuntimeCertificateStore, InMemoryRuntimeCertificateStore>()
             .AddSingleton<CertificateSelector>()
             .AddSingleton<IServerCertificateSelector>(s => s.GetRequiredService<CertificateSelector>())
+            .AddSingleton<OnDemandCertificateLoader>()
+            .AddSingleton<IOnDemandCertificateLoader>(s => s.GetRequiredService<OnDemandCertificateLoader>())
             .AddSingleton<IConsole>(PhysicalConsole.Singleton)
             .AddSingleton<IClock, SystemClock>()
             .AddSingleton<TermsOfServiceChecker>()

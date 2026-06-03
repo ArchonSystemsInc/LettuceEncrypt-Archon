@@ -21,7 +21,8 @@ public class StartupCertificateLoaderTests
         var selector = new Mock<CertificateSelector>(
             Options.Create(new LettuceEncryptOptions()),
             NullLogger<CertificateSelector>.Instance,
-            new InMemoryRuntimeCertificateStore());
+            new InMemoryRuntimeCertificateStore(),
+            Mock.Of<IOnDemandCertificateLoader>());
 
         selector
             .Setup(s => s.AddAsync(testCert))

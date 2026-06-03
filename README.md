@@ -201,7 +201,9 @@ public void ConfigureServices(IServiceCollection services)
 Create a class that implements `ICertificateRepository` to customize how to save your certificates.
 
 Create a class that implements `ICertificateSource` to customize where pre-existing certificates are
-found when the server starts.
+found. `GetCertificatesAsync` is used to load all certificates when the server starts, and
+`GetCertificateAsync` is used to look up a certificate for a single domain on demand (see
+"On-demand certificate lookup" below).
 
 ```c#
 using LettuceEncrypt;
@@ -225,11 +227,39 @@ class MyCertRepo : ICertificateRepository
 
 class MyCertSource : ICertificateSource
 {
-    public async Task<IEnumerable<X509Certificate2>> GetCertificatesAsync(CancellationToken cancellationToken);
+    public async Task<IEnumerable<X509Certificate2>> GetCertificatesAsync(CancellationToken cancellationToken)
     {
         // find and return certificate objects. Return an empty enumerable if none are found
     }
+
+    public async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken cancellationToken)
+    {
+        // find and return a certificate valid for domainName, or null if none is found
+    }
 }
+```
+
+### On-demand certificate lookup
+
+When a TLS handshake arrives for a configured domain that has no certificate loaded in memory,
+LettuceEncrypt will query the registered certificate sources on demand to locate one before
+resorting to `LettuceEncryptOptions.FallbackCertificate`. This means a certificate persisted to a
+store (file system, Azure Key Vault, etc.) by another instance can be served without restarting.
+
+Only domains that are part of the configured domain set can trigger a lookup, concurrent handshakes
+for the same domain share a single lookup, and failed lookups are suppressed for a cooldown window.
+
+This behavior is enabled by default and can be configured:
+
+```c#
+services.AddLettuceEncrypt(o =>
+{
+    // disable on-demand lookups entirely (pre-3.0 behavior)
+    o.EnableOnDemandCertificateLookup = false;
+
+    // or adjust how long failed lookups are suppressed (default: 5 minutes)
+    o.OnDemandLookupCooldown = TimeSpan.FromMinutes(1);
+});
 ```
 
 ### Customizing saving your account key

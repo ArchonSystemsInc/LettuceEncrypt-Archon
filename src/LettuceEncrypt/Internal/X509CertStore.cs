@@ -50,6 +50,14 @@ internal class X509CertStore : ICertificateSource, ICertificateRepository, IDisp
         return Task.FromResult(result.AsEnumerable());
     }
 
+    public async Task<X509Certificate2?> GetCertificateAsync(string domainName, CancellationToken cancellationToken)
+    {
+        var certs = await GetCertificatesAsync(cancellationToken);
+        return certs
+            .Where(c => X509CertificateHelpers.GetAllDnsNames(c).Contains(domainName, StringComparer.OrdinalIgnoreCase))
+            .MaxBy(c => c.NotAfter);
+    }
+
     public Task SaveAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
     {
         try

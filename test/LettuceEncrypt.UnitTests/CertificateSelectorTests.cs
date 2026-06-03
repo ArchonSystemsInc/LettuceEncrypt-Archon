@@ -23,7 +23,8 @@ public class CertificateSelectorTests
         var selector = new CertificateSelector(
             Options.Create(new LettuceEncryptOptions()),
             NullLogger<CertificateSelector>.Instance,
-            new InMemoryRuntimeCertificateStore());
+            new InMemoryRuntimeCertificateStore(),
+            Mock.Of<IOnDemandCertificateLoader>());
 
         await selector.AddAsync(testCert);
 
@@ -44,7 +45,8 @@ public class CertificateSelectorTests
         var selector = new CertificateSelector(
             Options.Create(new LettuceEncryptOptions()),
             NullLogger<CertificateSelector>.Instance,
-            new InMemoryRuntimeCertificateStore());
+            new InMemoryRuntimeCertificateStore(),
+            Mock.Of<IOnDemandCertificateLoader>());
 
         await selector.AddAsync(testCert);
 
@@ -64,7 +66,8 @@ public class CertificateSelectorTests
         var selector = new CertificateSelector(
             Options.Create(new LettuceEncryptOptions()),
             NullLogger<CertificateSelector>.Instance,
-            new InMemoryRuntimeCertificateStore());
+            new InMemoryRuntimeCertificateStore(),
+            Mock.Of<IOnDemandCertificateLoader>());
 
         await selector.AddAsync(fiveDays);
         await selector.AddAsync(tenDays);
@@ -79,5 +82,61 @@ public class CertificateSelectorTests
         await selector.AddAsync(fiveDays);
 
         Assert.Same(tenDays, await selector.SelectAsync(Mock.Of<ConnectionContext>(), CommonName));
+    }
+
+    [Fact]
+    public async Task SelectAsync_OnStoreMiss_QueriesOnDemandLoaderAndCachesResult()
+    {
+        const string DomainName = "ondemand.test.natemcmaster.com";
+        var testCert = CreateTestCert(DomainName);
+        var onDemandLoader = new Mock<IOnDemandCertificateLoader>();
+        onDemandLoader
+            .Setup(l => l.TryRetrieveAsync(DomainName, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCert);
+
+        var selector = new CertificateSelector(
+            Options.Create(new LettuceEncryptOptions()),
+            NullLogger<CertificateSelector>.Instance,
+            new InMemoryRuntimeCertificateStore(),
+            onDemandLoader.Object);
+
+        Assert.Same(testCert, await selector.SelectAsync(Mock.Of<ConnectionContext>(), DomainName));
+
+        // The second select must be served from the runtime store, not the on-demand loader.
+        Assert.Same(testCert, await selector.SelectAsync(Mock.Of<ConnectionContext>(), DomainName));
+        onDemandLoader.Verify(l => l.TryRetrieveAsync(DomainName, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SelectAsync_NullDomain_DoesNotInvokeOnDemandLoader()
+    {
+        var fallback = CreateTestCert("fallback.test.natemcmaster.com");
+        var onDemandLoader = new Mock<IOnDemandCertificateLoader>();
+
+        var selector = new CertificateSelector(
+            Options.Create(new LettuceEncryptOptions { FallbackCertificate = fallback }),
+            NullLogger<CertificateSelector>.Instance,
+            new InMemoryRuntimeCertificateStore(),
+            onDemandLoader.Object);
+
+        Assert.Same(fallback, await selector.SelectAsync(Mock.Of<ConnectionContext>(), null));
+        onDemandLoader.Verify(
+            l => l.TryRetrieveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task SelectAsync_OnDemandMiss_ReturnsFallbackCertificate()
+    {
+        const string DomainName = "missing.test.natemcmaster.com";
+        var fallback = CreateTestCert("fallback.test.natemcmaster.com");
+
+        var selector = new CertificateSelector(
+            Options.Create(new LettuceEncryptOptions { FallbackCertificate = fallback }),
+            NullLogger<CertificateSelector>.Instance,
+            new InMemoryRuntimeCertificateStore(),
+            Mock.Of<IOnDemandCertificateLoader>());
+
+        Assert.Same(fallback, await selector.SelectAsync(Mock.Of<ConnectionContext>(), DomainName));
     }
 }
