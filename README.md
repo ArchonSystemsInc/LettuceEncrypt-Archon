@@ -78,7 +78,13 @@ A few required options should be set, typically via the appsettings.json file.
         "DomainNames": [ "example.com", "www.example.com" ],
 
         // You must specify an email address to register with the certificate authority
-        "EmailAddress": "it-admin@example.com"
+        "EmailAddress": "it-admin@example.com",
+
+        // Optional - pin the certificate to a specific chain by its root issuer name.
+        // The ACME server returns the matching alternate chain, or its default chain if none matches.
+        // For example, "ISRG Root X1" requests the Let's Encrypt chain rooted at ISRG Root X1 for
+        // maximum device compatibility. Omit to accept the server's default chain.
+        "PreferredChain": "ISRG Root X1"
     }
 }
 ```

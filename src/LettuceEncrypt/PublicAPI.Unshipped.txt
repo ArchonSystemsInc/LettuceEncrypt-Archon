@@ -4,3 +4,5 @@ LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.get -> bool
 LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.set -> void
 LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.get -> System.TimeSpan
 LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.set -> void
+LettuceEncrypt.LettuceEncryptOptions.PreferredChain.get -> string?
+LettuceEncrypt.LettuceEncryptOptions.PreferredChain.set -> void

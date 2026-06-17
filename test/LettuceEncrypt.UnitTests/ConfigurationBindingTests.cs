@@ -19,6 +19,7 @@ public class ConfigurationBindingTests
             ["LettuceEncrypt:DomainNames:0"] = "one.com",
             ["LettuceEncrypt:DomainNames:1"] = "two.com",
             ["LettuceEncrypt:AllowedChallengeTypes"] = "Http01",
+            ["LettuceEncrypt:PreferredChain"] = "ISRG Root X1",
         });
 
         Assert.True(options.AcceptTermsOfService);
@@ -26,6 +27,15 @@ public class ConfigurationBindingTests
             one => Assert.Equal("one.com", one),
             two => Assert.Equal("two.com", two));
         Assert.Equal(Acme.ChallengeType.Http01, options.AllowedChallengeTypes);
+        Assert.Equal("ISRG Root X1", options.PreferredChain);
+    }
+
+    [Fact]
+    public void PreferredChainDefaultsToNull()
+    {
+        var options = ParseOptions(new());
+
+        Assert.Null(options.PreferredChain);
     }
 
     [Fact]

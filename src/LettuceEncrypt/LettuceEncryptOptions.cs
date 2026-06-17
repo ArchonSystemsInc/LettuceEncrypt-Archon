@@ -65,6 +65,17 @@ public class LettuceEncryptOptions
     public string[] AdditionalIssuers { get; set; } = Array.Empty<string>();
 
     /// <summary>
+    /// Optional preferred certificate chain. When set, LettuceEncrypt asks the ACME server for the
+    /// alternate chain whose issuer matches this value (e.g. <c>"ISRG Root X1"</c>); if no alternate
+    /// chain matches, the server's default chain is used. Matched against the issuer distinguished
+    /// name of the certificates in the chain.
+    /// <para>
+    /// Leave <c>null</c> (the default) to accept whatever chain the ACME server returns.
+    /// </para>
+    /// </summary>
+    public string? PreferredChain { get; set; }
+
+    /// <summary>
     /// A certificate to use if a certificates cannot be created automatically.
     /// <para>
     /// This can be null if there is not fallback certificate.
