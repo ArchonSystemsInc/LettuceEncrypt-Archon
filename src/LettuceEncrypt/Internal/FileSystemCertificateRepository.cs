@@ -24,9 +24,7 @@ internal class FileSystemCertificateRepository : ICertificateRepository, ICertif
         var certs = new List<X509Certificate2>();
         foreach (var file in _certDir.GetFiles("*.pfx"))
         {
-            var cert = new X509Certificate2(
-                fileName: file.FullName,
-                password: PfxPassword);
+            var cert = X509CertificateLoader.LoadPkcs12FromFile(file.FullName, PfxPassword);
             certs.Add(cert);
         }
 

@@ -319,7 +319,7 @@ internal class AcmeCertificateFactory
 
         var pfxBuilder = CreatePfxBuilder(acmeCert, privateKey);
         var pfx = pfxBuilder.Build("HTTPS Cert - " + _options.Value.DomainNames, string.Empty);
-        return new X509Certificate2(pfx, string.Empty, X509KeyStorageFlags.Exportable);
+        return X509CertificateLoader.LoadPkcs12(pfx, string.Empty, X509KeyStorageFlags.Exportable);
     }
 
     internal IPfxBuilder CreatePfxBuilder(CertificateChain certificateChain, IKey certKey)

@@ -103,7 +103,7 @@ internal class TlsAlpnChallengeResponder
             // SSLStream on Windows throws with ephemeral key sets
             // workaround from https://github.com/dotnet/runtime/issues/23749#issuecomment-388231655
             var originalCert = cert;
-            cert = new X509Certificate2(cert.Export(X509ContentType.Pkcs12));
+            cert = X509CertificateLoader.LoadPkcs12(cert.Export(X509ContentType.Pkcs12), null);
             originalCert.Dispose();
         }
 

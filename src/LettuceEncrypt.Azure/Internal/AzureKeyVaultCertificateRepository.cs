@@ -83,7 +83,7 @@ internal class AzureKeyVaultCertificateRepository : ICertificateRepository, ICer
 
             var certificate = await certificateClient.GetCertificateAsync(normalizedName, token);
 
-            return new X509Certificate2(certificate.Value.Cer);
+            return X509CertificateLoader.LoadCertificate(certificate.Value.Cer);
         }
         catch (OperationCanceledException)
         {
@@ -119,7 +119,7 @@ internal class AzureKeyVaultCertificateRepository : ICertificateRepository, ICer
 
             var certificate = await secretClient.GetSecretAsync(normalizedName, null, token);
 
-            var cert = new X509Certificate2(Convert.FromBase64String(certificate.Value.Value));
+            var cert = X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(certificate.Value.Value), null);
 
             _logger.LogInformation(
                 "Found certificate for {domainName} from Azure Key Vault with thumbprint {thumbprint}",
