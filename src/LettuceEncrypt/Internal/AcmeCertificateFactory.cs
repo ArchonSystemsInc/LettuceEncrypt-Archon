@@ -3,9 +3,9 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Certes;
-using Certes.Acme;
-using Certes.Acme.Resource;
+using Certify.ACME.Anvil;
+using Certify.ACME.Anvil.Acme;
+using Certify.ACME.Anvil.Acme.Resource;
 using LettuceEncrypt.Accounts;
 using LettuceEncrypt.Acme;
 using LettuceEncrypt.Internal.PfxBuilder;
@@ -72,7 +72,7 @@ internal class AcmeCertificateFactory
 
         _acmeAccountKey = account != null
             ? KeyFactory.FromDer(account.PrivateKey)
-            : KeyFactory.NewKey(Certes.KeyAlgorithm.ES256);
+            : KeyFactory.NewKey(Certify.ACME.Anvil.KeyAlgorithm.ES256);
 
         _client = _acmeClientFactory.Create(_acmeAccountKey);
 
@@ -311,7 +311,7 @@ internal class AcmeCertificateFactory
         {
             CommonName = commonName,
         };
-        var privateKeyAlgorithm = (Certes.KeyAlgorithm)_options.Value.KeyAlgorithm;
+        var privateKeyAlgorithm = (Certify.ACME.Anvil.KeyAlgorithm)_options.Value.KeyAlgorithm;
         var privateKey = KeyFactory.NewKey(privateKeyAlgorithm, _options.Value.KeySize);
         var acmeCert = await _client.GetCertificateAsync(csrInfo, privateKey, order);
 

@@ -3,7 +3,7 @@
 
 using Azure;
 using Azure.Security.KeyVault.Secrets;
-using Certes;
+using Certify.ACME.Anvil;
 using LettuceEncrypt.Accounts;
 using LettuceEncrypt.Acme;
 using LettuceEncrypt.Azure.Internal;
@@ -42,7 +42,7 @@ public class AzureKeyVaultAccountStoreTests
         {
             Id = 1234,
             EmailAddresses = new[] { "test@example.com" },
-            PrivateKey = KeyFactory.NewKey(Certes.KeyAlgorithm.ES512).ToDer(),
+            PrivateKey = KeyFactory.NewKey(Certify.ACME.Anvil.KeyAlgorithm.ES512).ToDer(),
         };
 
         await store.SaveAccountAsync(accountModel, default);

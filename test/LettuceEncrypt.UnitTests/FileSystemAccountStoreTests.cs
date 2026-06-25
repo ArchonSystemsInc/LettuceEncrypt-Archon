@@ -3,7 +3,7 @@
 
 #nullable enable
 using System.Text.Json;
-using Certes;
+using Certify.ACME.Anvil;
 using LettuceEncrypt.Accounts;
 using LettuceEncrypt.Internal;
 using Microsoft.Extensions.Hosting;
@@ -44,7 +44,7 @@ public class FileSystemAccountStoreTests : IDisposable
     public async Task ItStoresAsJson()
     {
         var store = CreateStore();
-        var key = KeyFactory.NewKey(Certes.KeyAlgorithm.RS256);
+        var key = KeyFactory.NewKey(Certify.ACME.Anvil.KeyAlgorithm.RS256);
         var bytes = key.ToDer();
 
         var account = new AccountModel

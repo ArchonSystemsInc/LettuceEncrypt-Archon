@@ -5,9 +5,9 @@ namespace LettuceEncrypt.Internal.PfxBuilder;
 
 internal sealed class PfxBuilderWrapper : IPfxBuilder
 {
-    private readonly Certes.Pkcs.PfxBuilder _pfxBuilder;
+    private readonly Certify.ACME.Anvil.Pkcs.PfxBuilder _pfxBuilder;
 
-    public PfxBuilderWrapper(Certes.Pkcs.PfxBuilder pfxBuilder)
+    public PfxBuilderWrapper(Certify.ACME.Anvil.Pkcs.PfxBuilder pfxBuilder)
     {
         _pfxBuilder = pfxBuilder;
     }

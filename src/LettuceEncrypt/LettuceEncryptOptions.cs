@@ -49,26 +49,26 @@ public class LettuceEncryptOptions
     internal bool UseStagingServerExplicitlySet => _useStagingServer.HasValue;
 
     /// <summary>
-    /// Additional issuers passed to certes before building the successfully downloaded certificate,
-    /// used internally by certes to verify the issuer for authenticity.
+    /// Additional issuers passed to the ACME library before building the successfully downloaded certificate,
+    /// used internally to verify the issuer for authenticity.
     /// <para>
     /// This is useful especially when using a staging server (e.g. for integration tests) with a root certificate
-    /// that is not part of certes' embedded resources.
-    /// See https://github.com/fszlin/certes/tree/v3.0.0/src/Certes/Resources/Certificates for context.
+    /// that is not part of the ACME library's embedded resources.
     /// </para>
     /// </summary>
     /// <remarks>
-    /// Lettuce encrypt uses certes internally, while certes depends on BouncyCastle.Cryptography to parse
+    /// LettuceEncrypt uses Certify.ACME.Anvil internally, which depends on BouncyCastle.Cryptography to parse
     /// certificates. See https://github.com/bcgit/bc-csharp/blob/830d9b8c7bdfcec511bff0a6cf4a0e8ed568e7c1/crypto/src/x509/X509CertificateParser.cs#L20
     /// if you're wondering what certificate formats are supported.
     /// </remarks>
     public string[] AdditionalIssuers { get; set; } = Array.Empty<string>();
 
     /// <summary>
-    /// Optional preferred certificate chain. When set, LettuceEncrypt asks the ACME server for the
-    /// alternate chain whose issuer matches this value (e.g. <c>"ISRG Root X1"</c>); if no alternate
-    /// chain matches, the server's default chain is used. Matched against the issuer distinguished
-    /// name of the certificates in the chain.
+    /// Optional preferred certificate chain. When set, LettuceEncrypt selects the offered chain
+    /// (default or alternate) whose trust anchor matches this value (e.g. <c>"ISRG Root X1"</c>);
+    /// if no chain matches, the server's default chain is used. Matched against the issuer Common
+    /// Name of the topmost (root-most) certificate of each offered chain — the same rule Certbot's
+    /// <c>--preferred-chain</c> uses.
     /// <para>
     /// Leave <c>null</c> (the default) to accept whatever chain the ACME server returns.
     /// </para>

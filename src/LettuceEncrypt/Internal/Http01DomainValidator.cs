@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Nate McMaster & Archon Systems Inc.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Certes.Acme;
-using Certes.Acme.Resource;
+using Certify.ACME.Anvil.Acme;
+using Certify.ACME.Anvil.Acme.Resource;
 
 namespace LettuceEncrypt.Internal;
 
