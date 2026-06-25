@@ -26,7 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Webprofusion.Certify.ACME.Anvil" Version="3.3.3" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.103" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.300" />
   </ItemGroup>
 
 </Project>
