@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 #nullable enable
-using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using LettuceEncrypt.Internal;
 using McMaster.Extensions.Xunit;
@@ -22,13 +21,6 @@ public class FileSystemCertificateRepoTests
     [InlineData("")]
     public async Task ItCanSaveCertsWithoutPassword(string? password)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && RuntimeInformation.FrameworkDescription.StartsWith(".NET 8", StringComparison.OrdinalIgnoreCase))
-        {
-            // MacOS on net8.0 doesn't support null password
-            // https://github.com/dotnet/runtime/issues/23635
-            return;
-        }
-
         var dir = new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName()));
         var repo = new FileSystemCertificateRepository(dir, password);
         var cert = CreateTestCert("localhost");

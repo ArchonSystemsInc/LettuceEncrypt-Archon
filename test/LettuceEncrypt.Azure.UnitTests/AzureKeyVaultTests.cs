@@ -191,4 +191,73 @@ public class AzureKeyVaultTests
             c => c.GetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    // Exercises the public-cert (.Cer) load path: SaveAsync's duplicate check loads the existing
+    // Key Vault cert via X509CertificateLoader.LoadCertificate and compares thumbprints.
+    [Fact]
+    public async Task SaveAsyncSkipsImportWhenKeyVaultCertMatchesThumbprint()
+    {
+        const string Domain = "github.com";
+        var cert = TestUtils.CreateTestCert(Domain);
+        var name = AzureKeyVaultCertificateRepository.NormalizeHostName(Domain);
+
+        var certClient = new Mock<CertificateClient>();
+        certClient
+            .Setup(c => c.GetCertificateAsync(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Response.FromValue(
+                CertificateModelFactory.KeyVaultCertificateWithPolicy(
+                    new CertificateProperties(name), cer: cert.RawData),
+                Mock.Of<Response>()));
+        var certClientFactory = new Mock<ICertificateClientFactory>();
+        certClientFactory.Setup(c => c.Create()).Returns(certClient.Object);
+
+        var repository = new AzureKeyVaultCertificateRepository(
+            certClientFactory.Object,
+            Mock.Of<ISecretClientFactory>(),
+            Mock.Of<IDomainLoader>(),
+            NullLogger<AzureKeyVaultCertificateRepository>.Instance);
+
+        await repository.SaveAsync(cert, CancellationToken.None);
+
+        certClient.Verify(
+            c => c.ImportCertificateAsync(It.IsAny<ImportCertificateOptions>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task SaveAsyncImportsWhenKeyVaultCertHasDifferentThumbprint()
+    {
+        const string Domain = "github.com";
+        var existing = TestUtils.CreateTestCert(Domain);
+        var incoming = TestUtils.CreateTestCert(Domain); // fresh key => different thumbprint
+        var name = AzureKeyVaultCertificateRepository.NormalizeHostName(Domain);
+
+        var certClient = new Mock<CertificateClient>();
+        certClient
+            .Setup(c => c.GetCertificateAsync(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Response.FromValue(
+                CertificateModelFactory.KeyVaultCertificateWithPolicy(
+                    new CertificateProperties(name), cer: existing.RawData),
+                Mock.Of<Response>()));
+        certClient
+            .Setup(c => c.ImportCertificateAsync(It.IsAny<ImportCertificateOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Response.FromValue(
+                CertificateModelFactory.KeyVaultCertificateWithPolicy(
+                    new CertificateProperties(name), cer: incoming.RawData),
+                Mock.Of<Response>()));
+        var certClientFactory = new Mock<ICertificateClientFactory>();
+        certClientFactory.Setup(c => c.Create()).Returns(certClient.Object);
+
+        var repository = new AzureKeyVaultCertificateRepository(
+            certClientFactory.Object,
+            Mock.Of<ISecretClientFactory>(),
+            Mock.Of<IDomainLoader>(),
+            NullLogger<AzureKeyVaultCertificateRepository>.Instance);
+
+        await repository.SaveAsync(incoming, CancellationToken.None);
+
+        certClient.Verify(
+            c => c.ImportCertificateAsync(It.IsAny<ImportCertificateOptions>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
