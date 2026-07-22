@@ -123,7 +123,7 @@ internal class AcmeClient
     public async Task<CertificateChain> GetCertificateAsync(CsrInfo csrInfo, IKey privateKey, IOrderContext order)
     {
         _logger.LogAcmeAction("GenerateCertificate", order);
-        return await order.Generate(csrInfo, privateKey, _options.Value.PreferredChain);
+        return await order.Generate(csrInfo, privateKey, _options.Value.PreferredChain, retryCount: 5);
     }
 
     private static Exception MissingAccountContext() => new InvalidOperationException("Account wasn't initialized yet");
