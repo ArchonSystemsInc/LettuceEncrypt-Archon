@@ -20,6 +20,7 @@ public class ConfigurationBindingTests
             ["LettuceEncrypt:DomainNames:1"] = "two.com",
             ["LettuceEncrypt:AllowedChallengeTypes"] = "Http01",
             ["LettuceEncrypt:PreferredChain"] = "ISRG Root X1",
+            ["LettuceEncrypt:FinalizeOrderRetryCount"] = "7",
         });
 
         Assert.True(options.AcceptTermsOfService);
@@ -28,6 +29,7 @@ public class ConfigurationBindingTests
             two => Assert.Equal("two.com", two));
         Assert.Equal(Acme.ChallengeType.Http01, options.AllowedChallengeTypes);
         Assert.Equal("ISRG Root X1", options.PreferredChain);
+        Assert.Equal(7, options.FinalizeOrderRetryCount);
     }
 
     [Fact]
@@ -36,6 +38,14 @@ public class ConfigurationBindingTests
         var options = ParseOptions(new());
 
         Assert.Null(options.PreferredChain);
+    }
+
+    [Fact]
+    public void FinalizeOrderRetryCountDefaultsToFive()
+    {
+        var options = ParseOptions(new());
+
+        Assert.Equal(5, options.FinalizeOrderRetryCount);
     }
 
     [Fact]

@@ -76,6 +76,15 @@ public class LettuceEncryptOptions
     public string? PreferredChain { get; set; }
 
     /// <summary>
+    /// How many times to re-poll the ACME order while it sits in the <c>Processing</c> state after finalize,
+    /// before giving up with "Fail to finalize order". Between polls the ACME client waits for the server's
+    /// requested Retry-After delay (minimum 2 seconds), so this is a cap on patience, not a busy-wait — polling
+    /// stops as soon as the order becomes valid. Raise it for CAs that finalize slowly (e.g. Google Trust
+    /// Services). Defaults to <c>5</c>.
+    /// </summary>
+    public int FinalizeOrderRetryCount { get; set; } = 5;
+
+    /// <summary>
     /// A certificate to use if a certificates cannot be created automatically.
     /// <para>
     /// This can be null if there is not fallback certificate.
