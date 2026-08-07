@@ -85,13 +85,17 @@ jobs:
         run: nuget push packages\*.nupkg -ApiKey ${{ secrets.GITHUB_TOKEN }} -Source github -SkipDuplicate
       # Trusted publishing: exchange the GitHub OIDC token for a short-lived
       # NuGet.org API key. The key expires after 1 hour, so log in immediately
-      # before pushing. Policy is configured at nuget.org under the
-      # ArchonSystemsInc account and is scoped to this repo + ci.yml.
+      # before pushing.
+      #
+      # `user` must be the nuget.org account that CREATED the trusted publishing
+      # policy, not the ArchonSystemsInc org that owns the packages -- passing
+      # the org here fails with "No matching trust policy owned by user".
+      # If this account ever loses access, recreate the policy and update this.
       - name: NuGet.org login (OIDC)
         id: nuget_login
         uses: NuGet/login@v1
         with:
-          user: ArchonSystemsInc
+          user: ArchonAndrewHunt
       - name: Push to NuGet.org
         run: nuget push packages\*.nupkg -ApiKey ${{ steps.nuget_login.outputs.NUGET_API_KEY }} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
       - name: Create GitHub release
