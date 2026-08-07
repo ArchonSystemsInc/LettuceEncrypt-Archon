@@ -3,7 +3,10 @@ name: CI
 on:
   push:
     branches-ignore:
-      - dependabot/*
+      # `*` stops at `/`, and dependabot branches are several segments deep
+      # (e.g. dependabot/nuget/src/some-group-abc123), so `**` is required to
+      # suppress the push run that duplicates the pull_request run.
+      - dependabot/**
   pull_request:
   workflow_dispatch:
     inputs:
