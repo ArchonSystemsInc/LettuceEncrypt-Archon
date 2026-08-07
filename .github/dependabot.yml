@@ -1,0 +1,26 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # One PR for all action bumps rather than one per action.
+      actions:
+        patterns:
+          - "*"
+
+  # Root LettuceEncrypt.sln pulls in every src/, test/ and samples/ project.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # Batch the safe bumps; majors get their own PR so they can be reviewed.
+      nuget-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
