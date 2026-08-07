@@ -57,9 +57,13 @@ jobs:
 #          fail_ci_if_error: true
 #          token: ${{ secrets.CODECOV_TOKEN }}
   release:
-    if: ${{ github.event.inputs.release }}
+    if: ${{ github.event.inputs.release == 'true' }}
     needs: build
     runs-on: windows-latest
+    permissions:
+      id-token: write # required for NuGet.org trusted publishing (OIDC)
+      contents: write # required to create the GitHub release
+      packages: write # required to push to the GitHub package registry
     env:
       PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
     steps:
@@ -76,8 +80,17 @@ jobs:
         run: nuget sources add -name github -source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json -username ${{ github.repository_owner }} -password ${{ secrets.GITHUB_TOKEN }}
       - name: Push to GitHub package registry
         run: nuget push packages\*.nupkg -ApiKey ${{ secrets.GITHUB_TOKEN }} -Source github -SkipDuplicate
+      # Trusted publishing: exchange the GitHub OIDC token for a short-lived
+      # NuGet.org API key. The key expires after 1 hour, so log in immediately
+      # before pushing. Policy is configured at nuget.org under the
+      # ArchonSystemsInc account and is scoped to this repo + ci.yml.
+      - name: NuGet.org login (OIDC)
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: ArchonSystemsInc
       - name: Push to NuGet.org
-        run: nuget push packages\*.nupkg -ApiKey ${{ secrets.NUGET_API_KEY }} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+        run: nuget push packages\*.nupkg -ApiKey ${{ steps.nuget_login.outputs.NUGET_API_KEY }} -Source https://api.nuget.org/v3/index.json -SkipDuplicate
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
         env:
