@@ -111,3 +111,12 @@ LettuceEncrypt.IRuntimeCertificateStore
 static Microsoft.AspNetCore.Hosting.LettuceEncryptKestrelHttpsOptionsExtensions.UseLettuceEncrypt(this Microsoft.AspNetCore.Server.Kestrel.Core.ListenOptions! listenOptions, System.IServiceProvider! applicationServices) -> Microsoft.AspNetCore.Server.Kestrel.Core.ListenOptions!
 static Microsoft.Extensions.DependencyInjection.LettuceEncryptServiceCollectionExtensions.AddLettuceEncrypt(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<LettuceEncrypt.LettuceEncryptOptions!>! configure, bool includeAcmeServices = true) -> LettuceEncrypt.ILettuceEncryptServiceBuilder!
 static Microsoft.Extensions.DependencyInjection.LettuceEncryptServiceCollectionExtensions.AddLettuceEncryptAcmeService(this LettuceEncrypt.ILettuceEncryptServiceBuilder! builder) -> LettuceEncrypt.ILettuceEncryptServiceBuilder!
+LettuceEncrypt.ICertificateSource.GetCertificateAsync(string! domainName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Security.Cryptography.X509Certificates.X509Certificate2?>!
+LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.get -> bool
+LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.set -> void
+LettuceEncrypt.LettuceEncryptOptions.FinalizeOrderRetryCount.get -> int
+LettuceEncrypt.LettuceEncryptOptions.FinalizeOrderRetryCount.set -> void
+LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.get -> System.TimeSpan
+LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.set -> void
+LettuceEncrypt.LettuceEncryptOptions.PreferredChain.get -> string?
+LettuceEncrypt.LettuceEncryptOptions.PreferredChain.set -> void

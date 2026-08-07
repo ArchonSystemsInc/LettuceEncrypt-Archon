@@ -1,10 +1,1 @@
 #nullable enable
-LettuceEncrypt.ICertificateSource.GetCertificateAsync(string! domainName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Security.Cryptography.X509Certificates.X509Certificate2?>!
-LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.get -> bool
-LettuceEncrypt.LettuceEncryptOptions.EnableOnDemandCertificateLookup.set -> void
-LettuceEncrypt.LettuceEncryptOptions.FinalizeOrderRetryCount.get -> int
-LettuceEncrypt.LettuceEncryptOptions.FinalizeOrderRetryCount.set -> void
-LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.get -> System.TimeSpan
-LettuceEncrypt.LettuceEncryptOptions.OnDemandLookupCooldown.set -> void
-LettuceEncrypt.LettuceEncryptOptions.PreferredChain.get -> string?
-LettuceEncrypt.LettuceEncryptOptions.PreferredChain.set -> void
